@@ -1,25 +1,89 @@
-           metadata = {
-                'PatientID': dicom_data.PatientID,
-                'PatientName': dicom_data.get('PatientName', 'N/A'),
-                'PatientSex': dicom_data.get('PatientSex', 'N/A'),
-                'PatientAge': dicom_data.get('PatientAge', 'N/A'),
-                'PatientBirthDate': dicom_data.get('PatientBirthDate', 'N/A'),
-                'StudyInstanceUID': dicom_data.StudyInstanceUID,
-                'StudyID': dicom_data.get('StudyID', 'N/A'),
-                'StudyDescription': dicom_data.get('StudyDescription', 'N/A'),
-                'StudyDate': dicom_data.get('StudyDate', 'N/A'),
-                'StudyTime': dicom_data.get('StudyTime', 'N/A'),
-                'SeriesInstanceUID': dicom_data.SeriesInstanceUID,
-                'SeriesDescription': dicom_data.get('SeriesDescription', 'N/A'),
-                'Modality': dicom_data.Modality,
-                'SeriesNumber': dicom_data.get('SeriesNumber', 'N/A'),
-                'SliceThickness': dicom_data.get('SliceThickness', 'N/A'),
-                'PixelSpacing': dicom_data.get('PixelSpacing', 'N/A'),
-                'ImagePositionPatient': dicom_data.get('ImagePositionPatient', 'N/A'),
-                'ImageOrientationPatient': dicom_data.get('ImageOrientationPatient', 'N/A'),
-                'Rows': dicom_data.get('Rows', 'N/A'),
-                'Columns': dicom_data.get('Columns', 'N/A'),
-                'AcquisitionDate': dicom_data.get('AcquisitionDate', 'N/A'),
-                'AcquisitionTime': dicom_data.get('AcquisitionTime', 'N/A'),
-                'ContrastBolusAgent': dicom_data.get('ContrastBolusAgent', 'N/A'),
-                'AccessionNumber': dicom_data.get('AccessionNumber', 'N/A')}
+dicom_db : schema
+
++----------------+        +----------------+        +----------------+       +--------------------+
+|    Patient     |        |      Study     |        |     Series     |       |   SliceMetadata    |
++----------------+        +----------------+        +----------------+       +--------------------+
+| PatientID (PK) |<----   | StudyInstanceUID (PK)   | SeriesInstanceUID (PK)  | SliceID (PK, AI)    |
+| PatientName    |        | PatientID (FK)          | StudyInstanceUID (FK)   | SeriesInstanceUID (FK) |
+| PatientSex     |        | StudyDescription        | SeriesDescription       | AcquisitionDate     |
+| PatientAge     |        | StudyDate               | Modality                | AcquisitionTime     |
+| PatientBirthDate|       | StudyTime               | SliceThickness          | ContrastBolusAgent  |
+| PatientIdentityRemoved  | StudyID                 | PixelSpacing            | AccessionNumber      |
+| DeIdentificationMethod  | SeriesDate              | ImagePositionPatient    | SliceNumber          |
+| LastMenstrualDate|      | ReferringPhysicianName  | ImageOrientationPatient | SliceLocation       |
++----------------+        +----------------+        +----------------+     +--------------------+
+                          |                        |                       |
+                                                   |                       |
+                         +-------------------+----------------------------+
+                         |                             |
+                         FOREIGN KEY (PatientID)       FOREIGN KEY (StudyInstanceUID)
+                         (Patient)                     (Study)
+
+CREATE TABLE IF NOT EXISTS Patient (
+    PatientID TEXT PRIMARY KEY,
+    PatientName TEXT,
+    PatientSex TEXT,
+    PatientAge TEXT,
+    PatientBirthDate TEXT,
+    PatientIdentityRemoved TEXT,
+    DeIdentificationMethod TEXT,
+    LastMenstrualDate TEXT
+);
+__________________________________________________________________________________________________________________________________________________________
+CREATE TABLE IF NOT EXISTS Study (
+    StudyInstanceUID TEXT PRIMARY KEY,
+    PatientID TEXT,
+    StudyDescription TEXT,
+    StudyDate TEXT,
+    StudyTime TEXT,
+    StudyID TEXT,
+    SeriesDate TEXT,
+    ReferringPhysicianName TEXT,
+    FOREIGN KEY (PatientID) REFERENCES Patient (PatientID)
+);
+__________________________________________________________________________________________________________________________________________________________
+CREATE TABLE IF NOT EXISTS Series (
+    SeriesInstanceUID TEXT PRIMARY KEY,
+    StudyInstanceUID TEXT,
+    SeriesDescription TEXT,
+    Modality TEXT,
+    SliceThickness TEXT,
+    PixelSpacing TEXT,
+    ImagePositionPatient TEXT,
+    ImageOrientationPatient TEXT,
+    Rows INTEGER,
+    Columns INTEGER,
+    ImageType TEXT,
+    AcquisitionNumber TEXT,
+    InstanceNumber TEXT,
+    PatientPosition TEXT,
+    ExposureTime INTEGER,
+    KVP REAL,
+    TableHeight REAL,
+    SliceLocation REAL,
+    BodyPartExamined TEXT,
+    ScanOptions TEXT,
+    ReconstructionDiameter REAL,
+    DistanceSourceToPatient REAL,
+    GantryDetectorTilt REAL,
+    RotationDirection TEXT,
+    ConvolutionKernel TEXT,
+    FOREIGN KEY (StudyInstanceUID) REFERENCES Study (StudyInstanceUID)
+);
+__________________________________________________________________________________________________________________________________________________________
+CREATE TABLE IF NOT EXISTS SliceMetadata (
+    SliceID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SeriesInstanceUID TEXT,
+    AcquisitionDate TEXT,
+    AcquisitionTime TEXT,
+    ContrastBolusAgent TEXT,
+    AccessionNumber TEXT,
+    SliceNumber INTEGER,
+    SliceLocation REAL,
+    SliceThickness REAL,
+    PixelPaddingValue INTEGER,
+    RescaleIntercept REAL,
+    RescaleSlope REAL,
+    LongitudinalTemporalInfo TEXT,
+    FOREIGN KEY (SeriesInstanceUID) REFERENCES Series (SeriesInstanceUID)
+);
