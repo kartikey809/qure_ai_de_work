@@ -87,3 +87,13 @@ CREATE TABLE IF NOT EXISTS SliceMetadata (
     LongitudinalTemporalInfo TEXT,
     FOREIGN KEY (SeriesInstanceUID) REFERENCES Series (SeriesInstanceUID)
 );
+_____________________________________________________________________________________________________________________________________________________________
+
+
+*SCALABILITY* - 
+
+To scale the process in production environment where we need to handle large datasets , WE SHOULD BE LEVERAGING- 
+
+1.Parallel processing of datasets - To acheive this worker nodes will handle chunks of datastes to process across multiple nodes which will ensure memory and CPU resource utilization .
+2. Locally we could use multithreading / multiprocessing approach to handle database insertions according to scanerios, which will reduce sequential batch processing time.
+3. Use of Cloud services - To check for errors : AWS CloudWatch,Azure Monitor allow you to track logs and metrics for issues such as failed DICOM metadata extraction or slow processing times. For example, CloudWatch will be able to give alerts when the DICOM processing time exceeds a certain threshold, to identify bottlenecks.It also provides fetaures like auto-scaling and load balancing. When processing a large batch of DICOM images, if the load spikes, auto-scaling will automatically add more resources, ensuring no task is left incomplete and resources are utilized if available. Similarly, load balancing can distribute requests across multiple instances, ensuring continuous availability of DICOM services even if one instance fails. Cloud platforms also offer data replication across regions, ensuring that DICOM data is accessible and protected from data loss or service downtime.
